@@ -1,6 +1,9 @@
 # solana-ms
 Adventures in multisignature schemes using solana-cli  
 
+## License
+Open source, under MIT license
+
 ## Description
 Solana-ms is currently just a set of command line scripts to demonstrate
 how to create a multi-signature wallet, for robust storage and retrieval
@@ -34,10 +37,12 @@ to demonstrate retrieval, a signing ritual is performed to transfer the wrapped 
 original sender, and unwraps back to native SOL.
 
 ## How to run
-```$ chmod +x *.sh
-$ make online-signers-demo*
-$ make clean* # WARNING! deletes any keypair files in the current directory (rm *.json)!
-$ make offline-signers-demo```
+```
+    $ chmod +x *.sh
+    $ make online-signers-demo*
+    $ make clean* # WARNING! deletes any keypair files in the current directory (rm *.json)!
+    $ make offline-signers-demo
+```
 
 ## Presigner error issue
 You can see that in the offline signing method, where the signatures are 
