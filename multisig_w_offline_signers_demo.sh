@@ -55,11 +55,7 @@ solana-keygen new --no-bip39-passphrase -o $nonceAccount
 nonceAccountPubkey=`solana-keygen pubkey $nonceAccount`
 solana create-nonce-account $nonceAccount 0.1
 
-
-# Final recipient of the wrapped SOL (sent from the multisig):
-recipient=$signer1Pubkey
-
-# more nonce configuration setup
+# more nonce configuration setup 
 blockhash=`solana nonce-account $nonceAccountPubkey | grep blockhash | xargs -n 1 | tail -n -1`
 echo "blockhash: $blockhash"
 nonceAuthority=$signer1
@@ -73,64 +69,79 @@ echo ""
 # Currently, I believe this to be set up correctly, but results in "presigner error"
 # Looking for support to fix the bug / error I am experiencing
 
+
 # initialize
+spl-token create-account $wSOLTokenAddress --owner $signer1Pubkey # using signer1.json
+recipientTokenAddress=`spl-token account-info $wSOLTokenAddress $signer1Pubkey | grep Address | xargs -n 1 | tail -n -1 | sed 's/=/ /g' | xargs -n 1 | tail -n 1`
+echo "recipientTokenAddress: $recipientTokenAddress"
+echo ""
 echo "iniatizing the transaction"
-spl-token transfer $wSOLTokenAddress $amountActual $recipient \
+spl-token transfer $wSOLTokenAddress $amountActual $recipientTokenAddress \
 --fund-recipient \
+--sign-only \
+--blockhash $blockhash \
 --owner $multisigAddress \
+--mint-decimals $mintDecimals \
 --multisig-signer $signer1Pubkey \
 --multisig-signer $signer2Pubkey \
---blockhash $blockhash \
 --nonce $nonceAccountPubkey \
---nonce-authority $nonceAuthorityPubkey \
---sign-only \
---mint-decimals $mintDecimals # | grep "=" | tr -d [:space:]`
+--nonce-authority $nonceAuthorityPubkey
+ # | grep "=" | tr -d [:space:]`
 
 # first signature
 echo "obtaining first signature"
-signature1=`spl-token transfer $wSOLTokenAddress $amountActual $recipient \
+signature1=`spl-token transfer $wSOLTokenAddress $amountActual $recipientTokenAddress \
 --fund-recipient \
+--sign-only \
+--blockhash $blockhash \
 --owner $multisigAddress \
+--mint-decimals $mintDecimals \
 --multisig-signer $signer1 \
 --multisig-signer $signer2Pubkey \
---blockhash $blockhash \
 --nonce $nonceAccountPubkey \
---nonce-authority $nonceAuthorityPubkey \
---sign-only \
---mint-decimals $mintDecimals | grep "=" | tail -n -1 | tr -d [:space:]`
+--nonce-authority $nonceAuthorityPubkey | grep "=" | tail -n -1 | tr -d [:space:]`
 echo $signature1
 echo ""
 
 #2nd signature
 echo "obtaining second signature"
-signature2=`spl-token transfer $wSOLTokenAddress $amountActual $recipient \
+signature2=`spl-token transfer $wSOLTokenAddress $amountActual $recipientTokenAddress \
 --fund-recipient \
+--sign-only \
+--blockhash $blockhash \
 --owner $multisigAddress \
+--mint-decimals $mintDecimals \
 --multisig-signer $signer1Pubkey \
 --multisig-signer $signer2 \
---blockhash $blockhash \
 --nonce $nonceAccountPubkey \
---nonce-authority $nonceAuthorityPubkey \
---sign-only \
---mint-decimals $mintDecimals | grep "=" | tail -n -1 | tr -d [:space:]`
+--nonce-authority $nonceAuthorityPubkey | grep "=" | tail -n -1 | tr -d [:space:]`
 echo $signature2
 echo ""
 
 # broadcast the transaction
 echo "commencing multisig transfer:"
 # Use RUST_BACKTRACE=1? How to troubleshoot the "presigner error"
-spl-token transfer $wSOLTokenAddress $amountActual $recipient \
+#USAGE:
+#    spl-token transfer <TOKEN_ADDRESS> <TOKEN_AMOUNT> <RECIPIENT_ADDRESS or RECIPIENT_TOKEN_ACCOUNT_ADDRESS> --blockhash <BLOCKHASH> --config <PATH> --from <SENDER_TOKEN_ACCOUNT_ADDRESS> --fund-recipient --mint-decimals <MINT_DECIMALS> --multisig-signer <MULTISIG_SIGNER>... --nonce <PUBKEY> --nonce-authority <KEYPAIR> --recipient-is-ata-owner --sign-only --signer <PUBKEY=SIGNATURE>...
+spl-token transfer $wSOLTokenAddress $amountActual $recipientTokenAddress \
 --fund-recipient \
+--blockhash $blockhash \
 --owner $multisigAddress \
 --multisig-signer $signer1Pubkey \
 --multisig-signer $signer2Pubkey \
---blockhash $blockhash \
 --nonce $nonceAccountPubkey \
---nonce-authority $nonceAuthority \
+--nonce-authority $nonceAuthorityPubkey \
 --signer $signature1 \
 --signer $signature2
 
-echo "AT THIS POINT THE TRANSFER HAS FAILED. LOOK ABOVE ^^^. NOTHING ELSE BELOW HERE IS VALID :("
+# println to console for debug ;)
+#echo "nonceAccountPubkey: $nonceAccountPubkey"
+#echo "nonceAuthorityPubkey: $nonceAuthorityPubkey"
+#echo "signer1Pubkey: $signer1Pubkey"
+#echo "signer2Pubkey: $signer2Pubkey"
+#echo "signer3Pubkey: $signer3Pubkey"
+#echo "recipient $recipient"
+#echo "recipientTokenAddress: $recipientTokenAddress"
 
 echo "wrapped sol has been sent."
 echo ""
