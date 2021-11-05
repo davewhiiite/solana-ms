@@ -39,8 +39,8 @@ original sender, and unwraps back to native SOL.
 ## How to run
 ```
     $ chmod +x *.sh
-    $ make online-signers-demo*
-    $ make clean* # WARNING! deletes any keypair files in the current directory (rm *.json)!
+    $ make online-signers-demo
+    $ make clean # WARNING! deletes any keypair files in the current directory (rm *.json)!
     $ make offline-signers-demo
 ```
 
